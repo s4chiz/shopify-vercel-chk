@@ -621,7 +621,7 @@ async def process_card(cc, mes, ano, cvv, site_url, variant_id=None, proxy_str=N
     ourl = site_url if site_url.startswith('http') else f'https://{site_url}'
     displayName = ""
     payment_identifier = None
-    proxy = parse_proxy(proxy_str) if proxy_str else None
+    proxy = _build_proxy_url(proxy_str) if proxy_str else None
     checkpoint_data = None
     running_total = "0.00"
 
