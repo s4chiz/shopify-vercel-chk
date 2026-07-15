@@ -42,7 +42,7 @@ def chk():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            success, message, _gateway, total_price, currency = loop.run_until_complete(
+            success, message, gateway, total_price, currency = loop.run_until_complete(
                 asyncio.wait_for(
                     process_card(cc, mes, ano, cvv, site, proxy_str=proxy or None),
                     timeout=55,
@@ -63,9 +63,12 @@ def chk():
         else total_price or "0"
     )
 
+    gateway_str = gateway if gateway and gateway not in ("", "UNKNOWN") else "Shopify Payments"
+
     body = (
         f"Cc: {cc_raw}\n"
         f"Response: {clean_msg}\n"
+        f"Gateway: {gateway_str}\n"
         f"Amount: {amount_str}\n"
         f"Site: {site}\n"
         f"Proxy: {proxy or 'None'}\n"
