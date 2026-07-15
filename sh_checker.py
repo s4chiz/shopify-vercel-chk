@@ -1135,8 +1135,12 @@ async def process_card(cc, mes, ano, cvv, site_url, variant_id=None, proxy_str=N
                 vault_headers['x-checkout-cardsink-caller-identification-signature'] = ident_sig
             
             async with session.post('https://checkout.pci.shopifyinc.com/sessions', json=payload, headers=vault_headers, proxy=proxy) as response:
+                if response.status == 422:
+                    return False, 'CARD_DECLINED', gateway, total_price, currency
+                if response.status >= 400:
+                    return False, f'VAULT_ERROR_{response.status}', gateway, total_price, currency
                 try:
-                    token_data = await response.json()
+                    token_data = await response.json(content_type=None)
                     token = token_data.get('id')
                     if not token:
                         return False, 'Unable to get payment token', gateway, total_price, currency
