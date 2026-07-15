@@ -1135,14 +1135,16 @@ async def process_card(cc, mes, ano, cvv, site_url, variant_id=None, proxy_str=N
                 vault_headers['x-checkout-cardsink-caller-identification-signature'] = ident_sig
             
             async with session.post('https://checkout.pci.shopifyinc.com/sessions', json=payload, headers=vault_headers, proxy=proxy) as response:
+                _vault_status = response.status
+                _vault_text = await response.text()
                 try:
-                    token_data = await response.json(content_type=None)
-                except Exception as e:
-                    return False, f'Unable to get payment token: {str(e)}', gateway, total_price, currency
-                if response.status >= 400:
-                    # Return actual error from Shopify vault, not a generic message
-                    _verr = token_data.get('error') or token_data.get('message') or \
-                            token_data.get('errors') or f'VAULT_HTTP_{response.status}'
+                    token_data = json.loads(_vault_text) if _vault_text.strip() else {}
+                except Exception:
+                    token_data = {}
+                if _vault_status >= 400:
+                    _verr = (token_data.get('error') or token_data.get('message') or
+                             token_data.get('errors') or _vault_text.strip()[:120] or
+                             f'VAULT_HTTP_{_vault_status}')
                     if isinstance(_verr, (dict, list)):
                         _verr = json.dumps(_verr)
                     return False, str(_verr)[:120], gateway, total_price, currency
